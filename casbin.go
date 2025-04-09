@@ -5,7 +5,6 @@ import (
 	fileadapter "github.com/casbin/casbin/v2/persist/file-adapter"
 	"github.com/gofiber/fiber/v2"
 	"log"
-	"strings"
 )
 
 // SetupCasbin initializes the Casbin enforcer with the model and policy files
@@ -29,57 +28,71 @@ func SetupCasbin() (*casbin.Enforcer, error) {
 	return enforcer, nil
 }
 
-// CasbinMiddleware creates a middleware for role-based access control
-// CasbinMiddleware creates a middleware for role-based access control
-func CasbinMiddleware(enforcer *casbin.Enforcer) fiber.Handler {
+func CasbinAdminMiddleware(enforcer *casbin.Enforcer) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		enforcer.LoadPolicy()
-		var identifier string
-		// Extract userID or adminID from context based on path
-		path := c.Path()
-
-		if strings.Contains(path, "admin") {
-			log.Println("admin path detected")
-			roleRequest := RoleRequest{}
-			err := c.BodyParser(&roleRequest)
-			if err != nil {
-				return c.Status(400).JSON(DefaultResponse{
-					Status:  "error",
-					Message: "Invalid request body",
-					Data:    nil,
-				})
-			}
-			log.Println(roleRequest)
-			identifier = roleRequest.AdminID
-
-			if identifier == "" {
-				return c.Status(400).JSON(DefaultResponse{
-					Status:  "error",
-					Message: "Admin ID not provided or invalid",
-					Data:    nil,
-				})
-			}
-			log.Println("admin id:", identifier)
-		} else {
-			identifier = c.Params("userId")
-
-			if identifier == "" {
-				identifier = c.Query("user_id")
-				if identifier == "" {
-					return c.Status(400).JSON(DefaultResponse{
-						Status:  "error",
-						Message: "User ID not provided or invalid",
-						Data:    nil,
-					})
-				}
-			}
-			log.Println("user ID is:", identifier)
+		// Get admin ID from the header
+		adminID := c.Get("X-Admin-ID")
+		if adminID == "" {
+			return c.Status(400).JSON(DefaultResponse{
+				Status:  "error",
+				Message: "Missing admin ID in request header",
+			})
 		}
 
-		// Get the user's roles from Casbin
-		roles, err := enforcer.GetRolesForUser(identifier)
-		log.Println("roles are:", roles)
+		roles, err := enforcer.GetRolesForUser(adminID)
+		if err != nil {
+			return c.Status(500).JSON(DefaultResponse{
+				Status:  "500",
+				Message: "can't find roles",
+				Data:    nil,
+			})
+		}
 
+		if len(roles) == 0 {
+			return c.Status(403).JSON(DefaultResponse{
+				Status:  "error",
+				Message: "User has no assigned roles",
+			})
+		}
+
+		endpoint := c.Path()
+		isValid := false
+		for _, role := range roles {
+			isAllowed, err := enforcer.Enforce(role, endpoint, c.Method())
+			if err != nil {
+				continue
+			}
+			if isAllowed {
+				isValid = true
+				break
+			}
+		}
+
+		if !isValid {
+			return c.Status(403).JSON(DefaultResponse{
+				Status:  "error",
+				Message: "Insufficient permissions for this operation",
+			})
+		}
+
+		// Set the admin ID in locals for the next handler
+		c.Locals("adminID", adminID)
+		return c.Next()
+	}
+}
+
+func CasbinMiddleware(enforcer *casbin.Enforcer) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// Get user ID from the header
+		userID := c.Get("X-User-ID")
+		if userID == "" {
+			return c.Status(400).JSON(DefaultResponse{
+				Status:  "error",
+				Message: "Missing user ID in request header",
+			})
+		}
+
+		roles, err := enforcer.GetRolesForUser(userID)
 		if err != nil {
 			return c.Status(500).JSON(DefaultResponse{
 				Status:  "500",
@@ -98,14 +111,11 @@ func CasbinMiddleware(enforcer *casbin.Enforcer) fiber.Handler {
 
 		// Check if any of the user's roles has permission for this resource and method
 		resource := c.Path()
-		log.Println(resource)
 		method := c.Method()
-		log.Println(method)
 
 		// Try each role the user has until we find one that has permission
 		hasPermission := false
 		for _, role := range roles {
-			log.Println("role is:", role)
 			allowed, err := enforcer.Enforce(role, resource, method)
 			if err != nil {
 				continue // If error, try next role
@@ -125,6 +135,8 @@ func CasbinMiddleware(enforcer *casbin.Enforcer) fiber.Handler {
 			})
 		}
 
+		// Set the user ID in locals for the next handler
+		c.Locals("userID", userID)
 		return c.Next()
 	}
 }

@@ -7,15 +7,14 @@ func (h *APIHandlers) RegisterRoutes(app *fiber.App) {
 	api := app.Group("/api/" + h.APIGroup)
 	// User management routes
 	api.Post("/users", h.CreateUser())
-	api.Use(CasbinMiddleware(h.Enforcer))
-	api.Get("/users/:userId", h.GetUsers())
+	api.Post("/admin", CasbinAdminMiddleware(h.Enforcer), h.ManageRoles())
+	api.Get("/users/:userId", CasbinAdminMiddleware(h.Enforcer), h.GetUsers())
 
 	// RBAC management route
-	api.Post("/admin", h.ManageRoles())
 
 	// Data routes
-	api.Get("/normal-data", h.ReadNormalData())
-	api.Post("/normal-data", h.WriteNormalData())
-	api.Get("/secret-data", h.ReadSecretData())
-	api.Post("/secret-data", h.WriteSecretData())
+	api.Get("/normal-data", CasbinMiddleware(h.Enforcer), h.ReadNormalData())
+	api.Post("/normal-data", CasbinMiddleware(h.Enforcer), h.WriteNormalData())
+	api.Get("/secret-data", CasbinMiddleware(h.Enforcer), h.ReadSecretData())
+	api.Post("/secret-data", CasbinAdminMiddleware(h.Enforcer), h.WriteSecretData())
 }
