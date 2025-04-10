@@ -51,7 +51,7 @@ func CasbinAdminMiddleware(enforcer *casbin.Enforcer) fiber.Handler {
 		if len(roles) == 0 {
 			return c.Status(403).JSON(DefaultResponse{
 				Status:  "error",
-				Message: "User has no assigned roles",
+				Message: "User has no assigned admin roles",
 			})
 		}
 

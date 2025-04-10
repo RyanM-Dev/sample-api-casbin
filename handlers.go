@@ -147,7 +147,7 @@ func (h *APIHandlers) CreateUser() fiber.Handler {
 		// Add all requested roles
 		for _, role := range userRequest.Roles {
 			fullRole := h.APIGroup + "." + role
-			_, err := h.Enforcer.AddGroupingPolicy(userRequest.UserID, fullRole)
+			_, err = h.Enforcer.AddGroupingPolicy(userRequest.UserID, fullRole)
 			if err != nil {
 				// If Casbin fails, remove user from data store
 				h.DataStore.mu.Lock()
@@ -157,6 +157,14 @@ func (h *APIHandlers) CreateUser() fiber.Handler {
 				return c.Status(500).JSON(DefaultResponse{
 					Status:  "error",
 					Message: "Failed to assign role: " + err.Error(),
+					Data:    nil,
+				})
+			}
+			err = h.Enforcer.SavePolicy()
+			if err != nil {
+				return c.Status(500).JSON(DefaultResponse{
+					Status:  "error",
+					Message: "Failed to save role: " + err.Error(),
 					Data:    nil,
 				})
 			}
@@ -360,7 +368,6 @@ func (h *APIHandlers) GetUsers() fiber.Handler {
 func (h *APIHandlers) ReadNormalData() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// User ID already verified by middleware and stored in locals
-		_ = c.Locals("userID").(string) // We don't need to use it for reading normal data
 
 		return c.Status(200).JSON(DefaultResponse{
 			Status:  "success",
