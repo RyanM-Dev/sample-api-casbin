@@ -23,7 +23,7 @@ type UserRequest struct {
 
 // DataRequest includes only data for operations (no UserID needed as it's in header)
 type DataRequest struct {
-	Data interface{} `json:"data"`
+	Data string `json:"data"`
 }
 
 // RoleRequest represents the structure for role management
@@ -39,11 +39,17 @@ type User struct {
 	Name   string `json:"name"`
 }
 
+// DataItem represents a single data entry with sender information
+type DataItem struct {
+	SenderID string `json:"sender_id"`
+	Data     string `json:"data"`
+}
+
 // DataStore is a simple in-memory data store
 type DataStore struct {
 	users      map[string]User
-	normalData map[string]interface{}
-	secretData map[string]interface{}
+	normalData []DataItem
+	secretData []DataItem
 	mu         sync.RWMutex
 }
 
@@ -51,17 +57,13 @@ type DataStore struct {
 func NewDataStore() *DataStore {
 	return &DataStore{
 		users: make(map[string]User),
-		normalData: map[string]interface{}{
-			"items": []string{
-				"normal item 1",
-				"normal item 2",
-			},
+		normalData: []DataItem{
+			{SenderID: "system", Data: "normal item 1"},
+			{SenderID: "system", Data: "normal item 2"},
 		},
-		secretData: map[string]interface{}{
-			"sensitive_items": []string{
-				"confidential item 1",
-				"confidential item 2",
-			},
+		secretData: []DataItem{
+			{SenderID: "system", Data: "confidential item 1"},
+			{SenderID: "system", Data: "confidential item 2"},
 		},
 	}
 }
@@ -79,6 +81,112 @@ func NewAPIHandlers(enforcer *casbin.Enforcer, dataStore *DataStore, apiGroup st
 		Enforcer:  enforcer,
 		DataStore: dataStore,
 		APIGroup:  apiGroup,
+	}
+}
+
+// ReadNormalData returns the normal data
+func (h *APIHandlers) ReadNormalData() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		h.DataStore.mu.RLock()
+		defer h.DataStore.mu.RUnlock()
+
+		return c.JSON(DefaultResponse{
+			Status:  "success",
+			Message: "Normal data retrieved successfully",
+			Data:    h.DataStore.normalData,
+		})
+	}
+}
+
+// ReadSecretData returns the secret data
+func (h *APIHandlers) ReadSecretData() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		h.DataStore.mu.RLock()
+		defer h.DataStore.mu.RUnlock()
+
+		return c.JSON(DefaultResponse{
+			Status:  "success",
+			Message: "Secret data retrieved successfully",
+			Data:    h.DataStore.secretData,
+		})
+	}
+}
+
+// WriteNormalData adds a new item to normal data
+func (h *APIHandlers) WriteNormalData() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		userID := c.Locals("userID").(string)
+
+		var dataRequest DataRequest
+		if err := c.BodyParser(&dataRequest); err != nil {
+			return c.Status(400).JSON(DefaultResponse{
+				Status:  "error",
+				Message: "Invalid request body",
+				Data:    nil,
+			})
+		}
+
+		if dataRequest.Data == "" {
+			return c.Status(400).JSON(DefaultResponse{
+				Status:  "error",
+				Message: "Data cannot be empty",
+				Data:    nil,
+			})
+		}
+
+		newItem := DataItem{
+			SenderID: userID,
+			Data:     dataRequest.Data,
+		}
+
+		h.DataStore.mu.Lock()
+		h.DataStore.normalData = append(h.DataStore.normalData, newItem)
+		h.DataStore.mu.Unlock()
+
+		return c.JSON(DefaultResponse{
+			Status:  "success",
+			Message: "Data added successfully",
+			Data:    newItem,
+		})
+	}
+}
+
+// WriteSecretData adds a new item to secret data
+func (h *APIHandlers) WriteSecretData() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		userID := c.Locals("adminID").(string)
+
+		var dataRequest DataRequest
+		if err := c.BodyParser(&dataRequest); err != nil {
+			return c.Status(400).JSON(DefaultResponse{
+				Status:  "error",
+				Message: "Invalid request body",
+				Data:    nil,
+			})
+		}
+
+		if dataRequest.Data == "" {
+			return c.Status(400).JSON(DefaultResponse{
+				Status:  "error",
+				Message: "Data cannot be empty",
+				Data:    nil,
+			})
+		}
+
+		newItem := DataItem{
+			SenderID: userID,
+			Data:     dataRequest.Data,
+		}
+
+		h.DataStore.mu.Lock()
+		h.DataStore.secretData = append(h.DataStore.secretData, newItem)
+		h.DataStore.mu.Unlock()
+
+		return c.JSON(DefaultResponse{
+			Status:  "success",
+			Message: "Secret data added successfully",
+			Data:    newItem,
+		})
 	}
 }
 
@@ -360,109 +468,6 @@ func (h *APIHandlers) GetUsers() fiber.Handler {
 			Status:  "success",
 			Message: "Users retrieved successfully",
 			Data:    users,
-		})
-	}
-}
-
-// ReadNormalData returns normal data for users with appropriate roles
-func (h *APIHandlers) ReadNormalData() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		// User ID already verified by middleware and stored in locals
-
-		return c.Status(200).JSON(DefaultResponse{
-			Status:  "success",
-			Message: "Normal data retrieved successfully",
-			Data:    h.DataStore.normalData,
-		})
-	}
-}
-
-// WriteNormalData updates normal data for users with appropriate roles
-func (h *APIHandlers) WriteNormalData() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		// User ID already verified by middleware and stored in locals
-		userID := c.Locals("userID").(string) // We don't need to use it for writing normal data
-
-		// Parse data write request
-		var dataRequest DataRequest
-		if err := c.BodyParser(&dataRequest); err != nil {
-			return c.Status(400).JSON(DefaultResponse{
-				Status:  "error",
-				Message: "Invalid request body",
-				Data:    nil,
-			})
-		}
-
-		// Validate input
-		if dataRequest.Data == nil {
-			return c.Status(400).JSON(DefaultResponse{
-				Status:  "error",
-				Message: "Missing data field",
-				Data:    nil,
-			})
-		}
-
-		// Update the normal data
-		h.DataStore.mu.Lock()
-		h.DataStore.normalData[userID] = dataRequest.Data
-		h.DataStore.mu.Unlock()
-
-		return c.Status(200).JSON(DefaultResponse{
-			Status:  "success",
-			Message: "Normal data updated successfully",
-			Data:    nil,
-		})
-	}
-}
-
-// ReadSecretData returns secret data for users with appropriate roles
-func (h *APIHandlers) ReadSecretData() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		// User ID already verified by middleware and stored in locals
-		_ = c.Locals("userID").(string) // We don't need to use it for reading secret data
-
-		return c.Status(200).JSON(DefaultResponse{
-			Status:  "success",
-			Message: "Secret data retrieved successfully",
-			Data:    h.DataStore.secretData,
-		})
-	}
-}
-
-// WriteSecretData updates secret data for users with appropriate roles
-func (h *APIHandlers) WriteSecretData() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		// User ID already verified by middleware and stored in locals
-		adminID := c.Locals("adminID").(string)
-
-		// Parse data write request
-		var dataRequest DataRequest
-		if err := c.BodyParser(&dataRequest); err != nil {
-			return c.Status(400).JSON(DefaultResponse{
-				Status:  "error",
-				Message: "Invalid request body",
-				Data:    nil,
-			})
-		}
-
-		// Validate input
-		if dataRequest.Data == nil {
-			return c.Status(400).JSON(DefaultResponse{
-				Status:  "error",
-				Message: "Missing data field",
-				Data:    nil,
-			})
-		}
-
-		// Update the secret data
-		h.DataStore.mu.Lock()
-		h.DataStore.secretData[adminID] = dataRequest.Data
-		h.DataStore.mu.Unlock()
-
-		return c.Status(200).JSON(DefaultResponse{
-			Status:  "success",
-			Message: "Secret data updated successfully",
-			Data:    nil,
 		})
 	}
 }

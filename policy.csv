@@ -18,7 +18,10 @@ p, AhmadCompany.employee, /api/AhmadCompany/normal-data, GET
 p, AhmadCompany.employee, /api/AhmadCompany/normal-data, POST
 p, AhmadCompany.employee, /api/AhmadCompany/secret-data, GET
 p, AhmadCompany.user, /api/AhmadCompany/normal-data, GET
-g, ryan_new_user, RyanCompany.user
-g, ryan_new_user, RyanCompany.employee
+g, ryan_new_employee, RyanCompany.employee
+g, ahmad_new_user, AhmadCompany.user
+g, ryan_multi_role, RyanCompany.user
+g, ryan_multi_role, RyanCompany.employee
+g, ryan_multi_role, RyanCompany.admin
 g, ryan_user1, RyanCompany.user
-g, ryan_admin1, RyanCompany.admin
+g, ryan_user1, RyanCompany.employee

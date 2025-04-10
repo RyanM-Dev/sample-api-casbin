@@ -1,0 +1,837 @@
+{
+	"info": {
+		"_postman_id": "84c72acc-dcb9-4e04-8c96-7c31cf7cd377",
+		"name": "sample-casbin-api",
+		"description": "API collection for testing Casbin RBAC implementation with multiple company domains",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32269981"
+	},
+	"item": [
+		{
+			"name": "User Management",
+			"item": [
+				{
+					"name": "Create New User (Ryan Company)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"ryan_new_employee\",\n    \"name\": \"Ryan Employee\",\n    \"roles\": [\"employee\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"users"
+							]
+						},
+						"description": "Creates a new user with 'employee' role in Ryan Company"
+					},
+					"response": []
+				},
+				{
+					"name": "Create New User (Ahmad Company)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"ahmad_new_user\",\n    \"name\": \"Ahmad User\",\n    \"roles\": [\"user\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/AhmadCompany/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"AhmadCompany",
+								"users"
+							]
+						},
+						"description": "Creates a new user with 'user' role in Ahmad Company"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Multi-Role User (Ryan Company)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"ryan_multi_role\",\n    \"name\": \"Ryan Multi-Role User\",\n    \"roles\": [\"user\", \"employee\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"users"
+							]
+						},
+						"description": "Creates a new user with multiple roles ('user' and 'employee') in Ryan Company"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Multi-Role User (Ryan Company) Copy",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"ryan_multi_role\",\n    \"name\": \"Ryan Multi-Role User\",\n    \"roles\": [\"user\", \"employee\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"users"
+							]
+						},
+						"description": "Creates a new user with multiple roles ('user' and 'employee') in Ryan Company"
+					},
+					"response": []
+				}
+			],
+			"description": "User creation and management endpoints"
+		},
+		{
+			"name": "Role Management",
+			"item": [
+				{
+					"name": "Assign Role (Ryan Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Admin-ID",
+								"value": "ryan_admin1",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"ryan_new_employee\",\n    \"role\": \"admin\",\n    \"action\": \"assign\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/admin",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"admin"
+							]
+						},
+						"description": "Ryan admin assigns 'admin' role to another user"
+					},
+					"response": []
+				},
+				{
+					"name": "Withdraw Role (Ryan Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Admin-ID",
+								"value": "ryan_admin1",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"ryan_new_employee\",\n    \"role\": \"admin\",\n    \"action\": \"withdraw\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/admin",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"admin"
+							]
+						},
+						"description": "Ryan admin withdraws 'admin' role from another user"
+					},
+					"response": []
+				},
+				{
+					"name": "Unauthorized Role Management (Non-Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Admin-ID",
+								"value": "ryan_user1",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"ryan_new_employee\",\n    \"role\": \"admin\",\n    \"action\": \"assign\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/admin",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"admin"
+							]
+						},
+						"description": "A regular user (not admin) attempts to manage roles (should fail)"
+					},
+					"response": []
+				},
+				{
+					"name": "Cross-Company Role Management",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Admin-ID",
+								"value": "ryan_admin1",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": \"ahmad_new_user\",\n    \"role\": \"admin\",\n    \"action\": \"assign\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/AhmadCompany/admin",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"AhmadCompany",
+								"admin"
+							]
+						},
+						"description": "Ryan admin attempts to manage roles in Ahmad Company (should fail)"
+					},
+					"response": []
+				}
+			],
+			"description": "Management of user roles by admins"
+		},
+		{
+			"name": "Ryan Company Data Access",
+			"item": [
+				{
+					"name": "Get Normal Data (User Role)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_user1",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/normal-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"normal-data"
+							]
+						},
+						"description": "Ryan user reads normal data (allowed)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Secret Data (User Role)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_user1",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/secret-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"secret-data"
+							]
+						},
+						"description": "Ryan user attempts to read secret data (should fail)"
+					},
+					"response": []
+				},
+				{
+					"name": "Post Normal Data (User Role)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_user1",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data\": \"User submitted normal data\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/normal-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"normal-data"
+							]
+						},
+						"description": "Ryan user attempts to write normal data (should fail)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Normal Data (Employee Role)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_new_user",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/normal-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"normal-data"
+							]
+						},
+						"description": "Ryan employee reads normal data (allowed)"
+					},
+					"response": []
+				},
+				{
+					"name": "Post Normal Data (Employee Role)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_new_user",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data\": \"Employee submitted normal data\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/normal-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"normal-data"
+							]
+						},
+						"description": "Ryan employee writes normal data (allowed)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Secret Data (Employee Role)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_new_user",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/secret-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"secret-data"
+							]
+						},
+						"description": "Ryan employee reads secret data (allowed)"
+					},
+					"response": []
+				},
+				{
+					"name": "Post Secret Data (Employee Role)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_new_user",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data\": \"Employee attempted to write secret data\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/secret-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"secret-data"
+							]
+						},
+						"description": "Ryan employee attempts to write secret data (should fail)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Normal Data (Admin Role)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_admin1",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/normal-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"normal-data"
+							]
+						},
+						"description": "Ryan admin reads normal data (allowed)"
+					},
+					"response": []
+				},
+				{
+					"name": "Post Normal Data (Admin Role)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_admin1",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data\": \"Admin submitted normal data\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/normal-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"normal-data"
+							]
+						},
+						"description": "Ryan admin writes normal data (allowed)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Secret Data (Admin Role)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_admin1",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/secret-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"secret-data"
+							]
+						},
+						"description": "Ryan admin reads secret data (allowed)"
+					},
+					"response": []
+				},
+				{
+					"name": "Post Secret Data (Admin Role)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Admin-ID",
+								"value": "ryan_admin1",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data\": \"Admin submitted secret data\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/secret-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"secret-data"
+							]
+						},
+						"description": "Ryan admin writes secret data (allowed)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for accessing and managing data in Ryan Company"
+		},
+		{
+			"name": "Ahmad Company Data Access",
+			"item": [
+				{
+					"name": "Get Normal Data (Ahmad User)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ahmad_new_user",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/AhmadCompany/normal-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"AhmadCompany",
+								"normal-data"
+							]
+						},
+						"description": "Ahmad user reads normal data (allowed)"
+					},
+					"response": []
+				},
+				{
+					"name": "Cross-Company Access (Ryan User -> Ahmad Data)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_user1",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/AhmadCompany/normal-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"AhmadCompany",
+								"normal-data"
+							]
+						},
+						"description": "Ryan user attempts to access Ahmad Company data (should fail)"
+					},
+					"response": []
+				},
+				{
+					"name": "Cross-Company Access (Ryan Admin -> Ahmad Data)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "ryan_admin1",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/AhmadCompany/secret-data",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"AhmadCompany",
+								"secret-data"
+							]
+						},
+						"description": "Ryan admin attempts to access Ahmad Company secret data (should fail)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for accessing and managing data in Ahmad Company"
+		},
+		{
+			"name": "User Listing",
+			"item": [
+				{
+					"name": "Get Users (Ryan Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Admin-ID",
+								"value": "ryan_admin1",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/users/all",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"users",
+								"all"
+							]
+						},
+						"description": "Ryan admin retrieves all users (allowed)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Specific User (Ryan Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Admin-ID",
+								"value": "ryan_admin1",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/users/ryan_user1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"users",
+								"ryan_user1"
+							]
+						},
+						"description": "Ryan admin retrieves a specific user's details (allowed)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Users (Regular User)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Admin-ID",
+								"value": "ryan_user1",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/RyanCompany/users/all",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"RyanCompany",
+								"users",
+								"all"
+							]
+						},
+						"description": "Regular user attempts to retrieve all users (should fail)"
+					},
+					"response": []
+				}
+			],
+			"description": "Admin endpoints for listing users"
+		}
+	]
+}
